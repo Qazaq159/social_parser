@@ -5,7 +5,7 @@ import selenium
 from selenium.webdriver.common.by import By
 from pyvirtualdisplay import Display
 
-vdisplay = Display(visible=0, size=(1024, 768)) # if set visible value to 0, it will not show display
+vdisplay = Display(visible=1, size=(1024, 768)) # if set visible value to 0, it will not show display
 vdisplay.start()
 
 option = selenium.webdriver.ChromeOptions().add_argument('headless')
@@ -31,7 +31,7 @@ try:
     write_password(driver)
     sleep(2)
 
-    vdisplay.stop()
+
 except:
     login = driver.find_element(by=By.XPATH,
                                 value='//input[@autocomplete="on"]')
@@ -42,4 +42,9 @@ except:
     write_password(driver)
     sleep(2)
 
-    vdisplay.stop()
+driver.get('https://twitter.com/elonmusk')
+sleep(1.5)
+try:
+    tweets = driver.find_element(by=By.XPATH, value='/article')
+except Exception:
+    print('0')

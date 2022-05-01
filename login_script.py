@@ -2,6 +2,7 @@ from objects import Twitter_account, save_to_csv, get_tweet_data
 from selenium.webdriver.common.by import By
 from time import sleep
 from operator import itemgetter
+from selenium.webdriver.common.keys import Keys
 
 user = 'ferkin_kz'
 email = 'zat.tyme.su@gmail.com'
@@ -15,43 +16,45 @@ sleep(2)
 
 data = []
 tweet_ids = set()
-last_pos = browser.driver.execute_script('return window.pageYOffset;')
-scrolling = True
 
-while scrolling:
-    if len(data) > 100:
-        scrolling = False
+body = browser.driver.find_element(By.TAG_NAME, 'body')
+prev_h = browser.driver.execute_script('return window.pageYOffset') # saves initial position of webpage
 
-    page_cards = browser.driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]')
-    for card in page_cards[-40:]:
-        tweet = get_tweet_data(card)
+while True:
+    if len(data) > 100: # 100 is number of tweets which we needed
+        break
 
+    sleep(2)
+
+    page_cards = browser.driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]') # takes list of tweets
+    for card in page_cards[-10:]:
+        tweet = get_tweet_data(card) # getting its info
+
+        '''
+        Saving only unique tweets
+        '''
         if tweet:
-            tweet_id = ''
-            for i in tweet:
-                tweet_id += str(i)
+            tweet_id = tweet[0]
 
             if tweet_id not in tweet_ids:
                 tweet_ids.add(tweet_id)
+                tweet.pop(0)
                 data.append(tweet)
 
-    scroll_attempt = 0
-    while True:
-        browser.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-        sleep(2)
+    for i in range(4):
+        body.send_keys(Keys.PAGE_DOWN) # page down to take another part of tweets
 
-        cur_pos = browser.driver.execute_script('return window.pageYOffset;')
-        if last_pos == cur_pos:
-            scroll_attempt += 1
+    new_h = browser.driver.execute_script("return window.pageYOffset;")
 
-            if scroll_attempt >= 3:
-                browser.driver.execute_script('window.scrollTo(0, -document.body.scrollHeight);')
-            else:
-                sleep(2)
-        else:
-            last_pos = cur_pos
-            break
+    if new_h == prev_h:
+        for i in range(4):
+            body.send_keys(Keys.PAGE_UP) # page up to prevent unloading of tweets on webpage
+        sleep(1)
 
-data.sort(key=itemgetter(0), reverse=True)
+    else:
+        prev_h = new_h # if tweets loaded continue
 
-save_to_csv(data)
+
+data.sort(key=itemgetter(0), reverse=True) # sortire tweets by datetime
+
+save_to_csv(data) # saving it to data_twitter.csv

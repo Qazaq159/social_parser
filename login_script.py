@@ -46,4 +46,7 @@ except:
 driver.get('https://twitter.com/elonmusk')
 sleep(1.5)
 
+posts = driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]')
+
+
 

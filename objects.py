@@ -48,12 +48,12 @@ def get_tweet_data(post):
 
 
 class Twitter_account:
-    def __init__(self, nickname, password, email):
+    def __init__(self, nickname, password, email, visability=0):
         self.email = email
         self.nickname = nickname
         self.password = password
 
-        vdisplay = Display(visible=1, size=(1024, 768))  # if set visible value to 0, it will not show display
+        vdisplay = Display(visible=visability, size=(1024, 768))  # if set visible value to 0, it will not show display
         vdisplay.start()
 
         options = selenium.webdriver.ChromeOptions()

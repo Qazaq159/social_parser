@@ -8,7 +8,7 @@ email = 'zat.tyme.su@gmail.com'
 password = 'Twitter2022$'
 
 
-browser = Twitter_account(user, password, email)
+browser = Twitter_account(user, password, email, visability=0)
 
 browser.driver.get('https://twitter.com/elonmusk')
 sleep(2)

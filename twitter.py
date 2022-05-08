@@ -4,11 +4,11 @@ from time import sleep
 from operator import itemgetter
 from selenium.webdriver.common.keys import Keys
 
-user = 'ferkin_kz'
-email = 'zat.tyme.su@gmail.com'
-password = 'Twitter2022$'
+user = 'your username'
+email = 'your email'
+password = 'your password'
 
-browser = Twitter_account(user, password, email, visability=0)
+browser = Twitter_account(user, password, email, visability=1)
 
 browser.driver.get('https://twitter.com/elonmusk')
 sleep(2)

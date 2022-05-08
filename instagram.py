@@ -1,33 +1,13 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium import webdriver
-import selenium
-from time import sleep
+from tools import Instagram_account, save_to_csv_instagram
 
-driver = webdriver.Chrome('drivers/chromedriver')
-driver.get('https://instagram.com')
-sleep(1.5)
+username = 'your username'
+password = 'your password'
+number_of_posts = 30
+account_to_parse = 'https://www.instagram.com/zuck/'
 
-username = driver.find_element(By.XPATH, '//input[@name="username"]')
-username.send_keys('yzhaksylykov11')
+browser = Instagram_account(username, password, visability=1)
+browser.process(account_link=account_to_parse, number_of_posts=number_of_posts)
 
-password = driver.find_element(By.XPATH, '//input[@name="password"]')
-password.send_keys('Instagram2020')
-
-password.send_keys(Keys.ENTER)
-
-sleep(3)
-
-while True:
-    try:
-        press = driver.find_element(By.XPATH, '//button[text() = "Not Now"]')
-        press.send_keys(Keys.RETURN)
-    except:
-        break
-
-driver.get('https://instagram.com/zuck')
-
-
-
-
+data = browser.ready()
+save_to_csv_instagram(data)
 

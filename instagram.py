@@ -1,8 +1,8 @@
 from tools import Instagram_account, save_to_csv_instagram
 
-username = 'yzhaksylykov11'
-password = ''
-number_of_posts = 30
+username = 'your username'
+password = 'your password'
+number_of_posts = 30 # count of posts
 account_to_parse = 'https://www.instagram.com/zuck/'
 
 browser = Instagram_account(username, password, visability=1)

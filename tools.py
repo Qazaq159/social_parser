@@ -6,14 +6,15 @@ from time import sleep
 from pyvirtualdisplay import Display
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
+from operator import itemgetter
 
 '''
-function "save_to_csv": 
+function "save_to_csv_twitter": 
     saves multi-dimensional data variable as .csv file(table)
 '''
 
 
-def save_to_csv(data):
+def save_to_csv_twitter(data):
     with open('data_twitter.csv', 'w', newline='', encoding='utf-8') as f:
         header = ['date', 'username', 'name', 'text', 'content', 'reply', 'retweet', 'like']
         writer = csv.writer(f)
@@ -73,6 +74,7 @@ def get_tweet_data(post):
 
     return [id, time, nickname, name, text, link, reply, retweet, like]
 
+
 def save_to_csv_instagram(data):
     with open('data_instagram.csv', 'w', newline='', encoding='utf-8') as f:
         header = ['link', 'post_type', 'num_of_comments', 'content_link', 'text', 'views', 'likes', 'date']
@@ -80,6 +82,9 @@ def save_to_csv_instagram(data):
         writer.writerow(header)
         writer.writerows(data)
 
+
+def save_as_var_instagram(data):
+    header = ['date', 'post_type', 'num_of_comments', 'count_of_likes', 'views', 'text', 'content_link', 'link']
 
 
 class Twitter_account:
@@ -92,8 +97,9 @@ class Twitter_account:
         self.nickname = nickname
         self.password = password
 
-        vdisplay = Display(visible=visability, size=(1024, 768))  # if set visible value to 0, it will not show display
-        vdisplay.start()
+        self.vdisplay = Display(visible=visability,
+                                size=(1024, 768))  # if set visible value to 0, it will not show display
+        self.vdisplay.start()
 
         options = selenium.webdriver.ChromeOptions()
         options.add_argument('--no-sandbox')
@@ -110,6 +116,8 @@ class Twitter_account:
         username.send_keys(Keys.RETURN)
 
         sleep(2)
+
+        self.data = list()
 
         '''
         Causes of requiring typing username for safety regulations, I planned to type username, then password. If not type password.
@@ -135,11 +143,58 @@ class Twitter_account:
         password.send_keys(self.password)  # types password
         password.send_keys(Keys.RETURN)  # press ENTER to auhtorize
 
+    def process(self, account_link, number_of_posts):
+        self.driver.get(account_link)
+
+        sleep(2)
+
+        data = []
+        tweets_ids = set()
+
+        body = self.driver.find_element(By.TAG_NAME, 'body')
+        prev_h = self.driver.execute_script('return window.pageYOffset')
+
+        while True:
+            if len(data) > number_of_posts:
+                break
+
+            sleep(2)
+
+            page_cards = self.driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]')
+            for card in page_cards[-10:]:
+                tweet = get_tweet_data(card)
+
+                if tweet:
+                    tweet_id = tweet[0]
+                    if tweet_id not in tweets_ids:
+                        tweets_ids.add(tweet_id)
+                        tweet.pop(0)
+                        data.append(tweet)
+
+            for i in range(4):
+                body.send_keys(Keys.PAGE_DOWN)
+
+            new_h = self.driver.execute_script('return window.pageYOffset')
+
+            if new_h == prev_h:
+                for i in range(4):
+                    body.send_keys(Keys.PAGE_DOWN)
+                sleep(1)
+            else:
+                prev_h = new_h
+
+        data.sort(key=itemgetter(0), reverse=True)
+        self.data = data
+
+    def ready(self):
+        self.vdisplay.stop()
+        return self.data
+
 
 class Instagram_account:
     def __init__(self, username, password, visability=0):
-        vdisplay = Display(visible=visability, size=(1024, 768))
-        vdisplay.start()
+        self.vdisplay = Display(visible=visability, size=(1024, 768))
+        self.vdisplay.start()
 
         options = selenium.webdriver.ChromeOptions()
         options.add_argument('--no-sandbox')
@@ -161,12 +216,16 @@ class Instagram_account:
 
         sleep(3)
 
+        self.posts_data = list()
+
         while True:
             try:
                 press = self.driver.find_element(By.XPATH, '//button[text() = "Not Now"]')
                 press.send_keys(Keys.ENTER)
             except NoSuchElementException:
                 break
+
+    def ondeu(self, data):
 
     def get_post_data(self, post):
         self.driver.get(post[0])
@@ -211,11 +270,11 @@ class Instagram_account:
         self.driver.get(account_link)
         sleep(2)
 
-        self.posts_data = list()
+        posts_data = list()
         prev_h = self.driver.execute_script('return window.pageYOffset')
         body = self.driver.find_element(By.TAG_NAME, 'body')
 
-        while len(self.posts_data) < number_of_posts:
+        while len(posts_data) < number_of_posts:
             cards = self.driver.find_elements(By.XPATH, '//div[@class="Nnq7C weEfm"]//a[@tabindex="0"]')
 
             for card in cards[-24:]:
@@ -235,16 +294,16 @@ class Instagram_account:
 
                 try:
                     k = 0
-                    for i in self.posts_data:
+                    for i in posts_data:
                         if link in i:
                             k += 1
                             break
 
                     if k == 0:
-                        self.posts_data.append([link, post_type, comments])
+                        posts_data.append([link, post_type, comments])
                 except:
-                    if link not in self.posts_data:
-                        self.posts_data.append([link, post_type, comments])
+                    if link not in posts_data:
+                        posts_data.append([link, post_type, comments])
 
             body.send_keys(Keys.PAGE_DOWN)
             sleep(1)
@@ -255,6 +314,8 @@ class Instagram_account:
 
             prev_h = cur_h
 
+        self.posts_data = posts_data
+
     def ready(self):
         data = []
         for card in self.posts_data:
@@ -262,5 +323,8 @@ class Instagram_account:
                 data.append(card + self.get_post_data(card))
             except Exception as e:
                 print(card[0], card[1], e)
+
+        self.vdisplay.stop()
+        data = self.ondeu(self.posts_data)
 
         return data
